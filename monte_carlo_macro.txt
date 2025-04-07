@@ -1,0 +1,117 @@
+Sub monte_carlo()
+Dim Arr(2) As Single
+Dim Std_Dev As Single
+Dim Cal_Error As Single
+Dim Cal_Num As Single
+Dim Cal_Avg As Single
+Dim percentage As Single
+
+percentage = Worksheets("Sheet1").Range("D2").Value
+Debug.Print "Pecentage: "; percentage
+
+Application.ScreenUpdating = False
+NumRows = Range("A1", Range("A1").End(xlDown)).Rows.Count
+
+minArray = getData(NumRows, "B")
+minArraySum = getSum(minArray)
+Debug.Print minArraySum
+
+maxArray = getData(NumRows, "C")
+maxArraySum = getSum(maxArray)
+Debug.Print maxArraySum
+
+Arr(0) = minArraySum
+Arr(1) = maxArraySum
+
+Std_Dev = stddev(2, Arr)
+Debug.Print "StdDev: "; Std_Dev
+Range("E1").Value = "Sigma"
+Range("E2").Value = Std_Dev
+
+Cal_Error = CalError(Arr, percentage)
+Debug.Print "Error: "; Cal_Error
+Range("F1").Value = "Error"
+Range("F2").Value = Cal_Error
+
+Cal_Num = CalNum(Std_Dev, Cal_Error, percentage)
+Debug.Print "Number: "; Cal_Num
+Range("G1").Value = "N"
+Range("G2").Value = Cal_Num
+
+Cal_Avg = CalAvg(Cal_Num, Arr)
+Debug.Print "Avg: "; Cal_Avg
+Range("H1").Value = "Average"
+Range("H2").Value = Cal_Avg
+
+Application.ScreenUpdating = True
+End Sub
+
+Public Function getData(ByVal num As Integer, ByVal row As String) As Variant()
+    ReDim returnVal(num)
+    Dim i As Integer
+    Dim result As String
+    
+    For x = 2 To num
+       result = Range(row & x)
+       If result <> "" Then
+           ActiveCell.Offset(1, 0).Select
+           returnVal(i) = result
+           i = i + 1
+       End If
+    Next
+    getData = returnVal
+End Function
+
+Public Function getSum(ByVal inputArray As Variant) As Double
+Dim Sum As Double
+    For Each element In inputArray
+        Sum = Sum + element
+    Next element
+    getSum = Sum
+End Function
+
+Function Mean(k As Long, Arr() As Single)
+     Dim Sum As Single
+     Dim i As Integer
+     Sum = 0
+     For i = 1 To k
+         Sum = Sum + Arr(i)
+     Next i
+     Mean = Sum / k
+End Function
+
+Function stddev(k As Long, Arr() As Single)
+     Dim i As Integer
+     Dim avg As Single, SumSq As Single
+     avg = Mean(k, Arr)
+     For i = 1 To k
+          SumSq = SumSq + (Arr(i) - avg) ^ 2
+     Next i
+     stddev = Sqr(SumSq / (k - 1))
+End Function
+
+Function CalError(Arr() As Single, ByVal percentage As Long)
+    Dim error As Single
+    error = (Arr(1) - Arr(0)) * (percentage / 100)
+    CalError = error
+End Function
+
+Function CalNum(sigma As Single, error As Single, ByVal percentage As Long)
+    Dim result As Single
+    result = (percentage * sigma) / error
+    result = result * result
+    CalNum = result
+End Function
+
+Function CalAvg(number As Single, Arr() As Single)
+    Dim result As Single
+    ReDim result_arr(number) As Variant
+    For i = 1 To number:
+        r = Int((1 - 0 + 1) * Rnd + 0) * (Arr(1) - Arr(0)) + Arr(0)
+        result_arr(i) = r
+    Next i
+    arraySum = WorksheetFunction.Sum(result_arr)
+    arrayLen = UBound(result_arr) - LBound(result_arr) + 1
+    result = arraySum / arrayLen
+    CalAvg = result
+End Function
